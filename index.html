@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hourly Utilization Dashboard</title>
+    <!-- 1. Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 2. Use the Inter font for a clean look */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen flex items-center justify-center p-4">
+
+    <!-- 3. Main content card -->
+    <div class="w-full max-w-6xl bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 md:p-8">
+        
+        <!-- Chart Title -->
+        <h1 class="text-2xl font-bold text-center mb-2">Hourly Utilization</h1>
+        <h2 id="chart-day-title" class="text-lg text-gray-600 dark:text-gray-400 text-center mb-6">Saturday</h2>
+
+        <!-- NEW: Day Selector -->
+        <div id="day-selector" class="flex justify-center gap-1 sm:gap-2 mb-8 flex-wrap">
+            <!-- Buttons will be injected here by JavaScript -->
+        </div>
+
+        <!-- 4. Chart container -->
+        <div class="flex" style="height: 450px;">
+            
+            <!-- 5. Y-Axis Labels (as highlighted in your screenshot) -->
+            <div class="flex flex-col justify-between pr-4 text-right text-sm text-gray-500 dark:text-gray-400" style="height: 400px; margin-top: 24px;">
+                <span>100%</span>
+                <span>75%</span>
+                <span>50%</span>
+                <span>25%</span>
+                <span>0%</span>
+            </div>
+
+            <!-- 6. Chart Bars Area -->
+            <div class="flex-1 border-l border-b border-gray-300 dark:border-gray-700 flex items-end justify-around px-2 relative" style="height: 400px; margin-top: 24px;">
+                
+                <!-- 7. Background Grid Lines -->
+                <div class="absolute top-0 left-0 w-full h-px bg-gray-300 dark:bg-gray-700" style="top: 0%;"></div>
+                <div class="absolute left-0 w-full border-b border-dashed border-gray-300/50 dark:border-gray-700/50" style="top: 25%;"></div>
+                <div class="absolute left-0 w-full border-b border-dashed border-gray-300/50 dark:border-gray-700/50" style="top: 50%;"></div>
+                <div class="absolute left-0 w-full border-b border-dashed border-gray-300/50 dark:border-gray-700/50" style="top: 75%;"></div>
+
+                <!-- 8. Bars will be dynamically injected here by JavaScript -->
+                <div id="chart-bars" class="flex items-end justify-around w-full h-full">
+                    <!-- Bars are now dynamically generated -->
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // All the new data provided by the user
+        const csvData = `Day,Hour,Utilization (%)
+Monday,12 AM,0
+Monday,1 AM,5
+Monday,2 AM,5
+Monday,3 AM,5
+Monday,4 AM,5
+Monday,5 AM,14
+Monday,6 AM,23
+Monday,7 AM,23
+Monday,8 AM,27
+Monday,9 AM,31
+Monday,10 AM,31
+Monday,11 AM,35
+Monday,12 PM,38
+Monday,1 PM,34
+Monday,2 PM,38
+Monday,3 PM,53
+Monday,4 PM,65
+Monday,5 PM,76
+Monday,6 PM,72
+Monday,7 PM,66
+Monday,8 PM,53
+Monday,9 PM,36
+Monday,10 PM,17
+Monday,11 PM,10
+Tuesday,12 AM,0
+Tuesday,1 AM,5
+Tuesday,2 AM,5
+Tuesday,3 AM,5
+Tuesday,4 AM,5
+Tuesday,5 AM,18
+Tuesday,6 AM,24
+Tuesday,7 AM,27
+Tuesday,8 AM,26
+Tuesday,9 AM,31
+Tuesday,10 AM,33
+Tuesday,11 AM,35
+Tuesday,12 PM,38
+Tuesday,1 PM,35
+Tuesday,2 PM,38
+Tuesday,3 PM,49
+Tuesday,4 PM,67
+Tuesday,5 PM,77
+Tuesday,6 PM,72
+Tuesday,7 PM,70
+Tuesday,8 PM,56
+Tuesday,9 PM,37
+Tuesday,10 PM,15
+Tuesday,11 PM,10
+Wednesday,12 AM,0
+Wednesday,1 AM,5
+Wednesday,2 AM,5
+Wednesday,3 AM,5
+Wednesday,4 AM,5
+Wednesday,5 AM,15
+Wednesday,6 AM,23
+Wednesday,7 AM,27
+Wednesday,8 AM,26
+Wednesday,9 AM,32
+Wednesday,10 AM,33
+Wednesday,11 AM,36
+Wednesday,12 PM,35
+Wednesday,1 PM,36
+Wednesday,2 PM,44
+Wednesday,3 PM,49
+Wednesday,4 PM,66
+Wednesday,5 PM,71
+Wednesday,6 PM,68
+Wednesday,7 PM,61
+Wednesday,8 PM,50
+Wednesday,9 PM,35
+Wednesday,1S0 PM,17
+Wednesday,11 PM,9
+Thursday,12 AM,0
+Thursday,1 AM,5
+Thursday,2 AM,5
+Thursday,3 AM,5
+Thursday,4 AM,5
+Thursday,5 AM,13
+Thursday,6 AM,22
+Thursday,7 AM,22
+Thursday,8 AM,25
+Thursday,9 AM,30
+Thursday,10 AM,31
+Thursday,11 AM,34
+Thursday,12 PM,36
+Thursday,1 PM,32
+Thursday,2 PM,35
+Thursday,3 PM,45
+Thursday,4 PM,55
+Thursday,5 PM,65
+Thursday,6 PM,63
+Thursday,7 PM,52
+Thursday,8 PM,51
+Thursday,9 PM,32
+Thursday,10 PM,14
+Thursday,11 PM,9
+Friday,12 AM,0
+Friday,1 AM,5
+Friday,2 AM,5
+Friday,3 AM,5
+Friday,4 AM,5
+Friday,5 AM,12
+Friday,6 AM,17
+Friday,7 AM,24
+Friday,8 AM,29
+Friday,9 AM,33
+Friday,10 AM,36
+Friday,11 AM,42
+Friday,12 PM,40
+Friday,1 PM,40
+Friday,2 PM,45
+Friday,3 PM,48
+Friday,4 PM,53
+Friday,5 PM,54
+Friday,6 PM,45
+Friday,7 PM,38
+Friday,8 PM,37
+Friday,9 PM,29
+Friday,10 PM,15
+Friday,11 PM,9
+Saturday,12 AM,5
+Saturday,1 AM,5
+Saturday,2 AM,5
+Saturday,3 AM,5
+Saturday,4 AM,5
+Saturday,5 AM,5
+Saturday,6 AM,7
+Saturday,7 AM,18
+Saturday,8 AM,26
+Saturday,9 AM,39
+Saturday,10 AM,64
+Saturday,11 AM,69
+Saturday,12 PM,50
+Saturday,1 PM,49
+Saturday,2 PM,52
+Saturday,3 PM,64
+Saturday,4 PM,54
+Saturday,5 PM,32
+Saturday,6 PM,30
+Saturday,7 PM,32
+Saturday,8 PM,32
+Saturday,9 PM,24
+Saturday,10 PM,14
+Saturday,11 PM,7
+Sunday,12 AM,0
+Sunday,1 AM,5
+Sunday,2 AM,5
+Sunday,3 AM,5
+Sunday,4 AM,5
+Sunday,5 AM,5
+Sunday,6 AM,8
+Sunday,7 AM,15
+Sunday,8 AM,26
+Sunday,9 AM,44
+Sunday,10 AM,52
+Sunday,11 AM,55
+Sunday,12 PM,51
+Sunday,1 PM,44
+Sunday,2 PM,46
+Sunday,3 PM,47
+Sunday,4 PM,47
+Sunday,5 PM,47
+Sunday,6 PM,45
+Sunday,7 PM,37
+Sunday,8 PM,37
+Sunday,9 PM,24
+Sunday,10 PM,11
+Sunday,11 PM,7`;
+
+        // 9. Parse CSV data into a structured object
+        const allData = {};
+
+        function getHourIndex(hourStr) {
+            const [time, period] = hourStr.split(' ');
+            let hour = parseInt(time);
+            if (period === 'PM' && hour !== 12) hour += 12;
+            if (period === 'AM' && hour === 12) hour = 0; // 12 AM is 0
+            return hour;
+        }
+
+        const lines = csvData.trim().split('\n').slice(1); // Skip header
+        lines.forEach(line => {
+            const [day, hourStr, utilizationStr] = line.split(',');
+            // Fix for a typo in the provided Wednesday 10 PM data ("1S0 PM")
+            const cleanHourStr = hourStr.replace('S', '');
+            
+            const utilization = parseInt(utilizationStr);
+            const hourIndex = getHourIndex(cleanHourStr);
+            
+            if (!allData[day]) {
+                allData[day] = [];
+            }
+            
+            allData[day].push({
+                hour: cleanHourStr,
+                hourIndex: hourIndex,
+                utilization: utilization,
+                active: false // Will be set dynamically
+            });
+        });
+
+        // Sort data by hourIndex to be safe
+        for (const day in allData) {
+            allData[day].sort((a, b) => a.hourIndex - b.hourIndex);
+        }
+
+        // 10. Get current day and hour to set "LIVE" tag
+        const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        const now = new Date();
+        const currentDayName = daysOfWeek[now.getDay()];
+        const currentHourIndex = now.getHours(); // 0-23
+        
+        let selectedDay = currentDayName; // Track which day is currently viewed
+
+        // 11. Get DOM elements
+        const chartBarsContainer = document.getElementById('chart-bars');
+        const daySelectorContainer = document.getElementById('day-selector');
+        const dayTitle = document.getElementById('chart-day-title');
+
+        // 12. Main function to render the chart for a specific day
+        function renderChart(day) {
+            chartBarsContainer.innerHTML = ''; // Clear old bars
+            dayTitle.textContent = day; // Update title
+            
+            const dayData = allData[day];
+            if (!dayData) {
+                console.error("No data found for day:", day);
+                return; // Safety check
+            }
+
+            dayData.forEach(data => {
+                const isLive = (day === currentDayName && data.hourIndex === currentHourIndex);
+                
+                // --- Replicate original color logic ---
+                let barColor = '#FFDD01'; // Default bright yellow
+                if (data.hourIndex >= 17) { // 5 PM (17) onwards
+                    barColor = '#525843'; // Dark/evening color
+                }
+                // Special case for Saturday 4 PM (index 16)
+                if (day === 'Saturday' && data.hourIndex === 16) {
+                    barColor = '#f9e046'; // Slightly different yellow
+                }
+                // --- End color logic ---
+
+                // Container for the bar, value, and label
+                const barGroup = document.createElement('div');
+                barGroup.className = 'flex flex-col items-center h-full justify-end px-0.5 md:px-1 w-full relative';
+                
+                // Add "Live" indicator for the active bar
+                if (isLive) {
+                    const liveIndicator = document.createElement('div');
+                    liveIndicator.className = 'absolute -top-6 text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full shadow-lg z-10';
+                    liveIndicator.innerHTML = `
+                        <span class="font-bold">LIVE</span>
+                        <!-- Triangle pointer -->
+                        <div class="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-l-transparent border-r-4 border-r-transparent border-t-4 border-t-blue-500"></div>
+                    `;
+                    barGroup.appendChild(liveIndicator);
+                }
+
+                // Numerical value (e.g., "5%")
+                const valueSpan = document.createElement('span');
+                valueSpan.className = 'text-xs font-medium text-gray-700 dark:text-gray-300 mb-1';
+                // Don't show 0% to keep the chart clean
+                valueSpan.textContent = data.utilization > 0 ? `${data.utilization}%` : '';
+                
+                // The bar itself
+                const bar = document.createElement('div');
+                bar.className = 'w-full rounded-t-md transition-all duration-300 hover:opacity-80';
+                // Use min-height to make 0% bars invisible but still take space
+                bar.style.height = `${data.utilization}%`;
+                bar.style.minHeight = data.utilization === 0 ? '0px' : '2px'; // show a tiny sliver for non-zero
+                bar.style.backgroundColor = barColor;
+                
+                // Add highlight ring to active bar
+                if (isLive) {
+                    bar.classList.add('shadow-lg', 'ring-2', 'ring-blue-500', 'dark:ring-blue-400');
+                }
+
+                // Hour label (e.g., "12AM")
+                const hourSpan = document.createElement('span');
+                hourSpan.className = 'text-xs mt-2 text-gray-500 dark:text-gray-400 whitespace-nowrap';
+                // Use a shorter label on small screens to prevent crowding
+                hourSpan.innerHTML = `<span class="hidden sm:inline">${data.hour}</span><span class="sm:hidden">${data.hour.replace('AM','').replace('PM','')}</span>`;
+
+                
+                // Append elements in order: Value, Bar, Label
+                barGroup.appendChild(valueSpan);
+                barGroup.appendChild(bar);
+                barGroup.appendChild(hourSpan);
+
+                chartBarsContainer.appendChild(barGroup);
+            });
+        }
+
+        // 13. Create Day Selector Buttons
+        daysOfWeek.forEach(day => {
+            const button = document.createElement('button');
+            button.textContent = day.substring(0, 3); // "Mon", "Tue", etc.
+            button.dataset.day = day; // Store full day name
+            button.className = 'px-3 py-2 sm:px-4 rounded-md text-xs sm:text-sm font-medium transition-colors';
+            
+            if (day === selectedDay) {
+                button.classList.add('bg-blue-600', 'text-white', 'shadow-md');
+            } else {
+                button.classList.add('bg-gray-200', 'dark:bg-gray-700', 'hover:bg-gray-300', 'dark:hover:bg-gray-600');
+            }
+            
+            button.addEventListener('click', () => {
+                selectedDay = day; // Update global state
+                renderChart(day);
+                
+                // Update button styles
+                document.querySelectorAll('#day-selector button').forEach(btn => {
+                    if (btn.dataset.day === day) {
+                        btn.className = 'px-3 py-2 sm:px-4 rounded-md text-xs sm:text-sm font-medium transition-colors bg-blue-600 text-white shadow-md';
+                    } else {
+                        btn.className = 'px-3 py-2 sm:px-4 rounded-md text-xs sm:text-sm font-medium transition-colors bg-gray-200 dark:bg-gamma-700 hover:bg-gray-300 dark:hover:bg-gray-600';
+                    }
+                });
+            });
+            daySelectorContainer.appendChild(button);
+        });
+
+        // 14. Initial chart render on load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Also, I found and fixed a small typo in your CSV data ("1S0 PM" on Wednesday).
+            // The script now corrects this automatically.
+            renderChart(selectedDay);
+        });
+    </script>
+</body>
+</html>
